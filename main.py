@@ -34,24 +34,48 @@ def is_flush(cards):
     """ check if there is a flush combination out of a df of cards"""
     temp = cards.groupby('suit').size().reset_index(name='size')
     try:
-        print(temp["suit"].loc[temp["size"] == 5].values[0])  # prints the name of the suit with the flush
+        flush_suit = temp["suit"].loc[temp["size"] >= 5].values[0]  # prints the name of the suit with the flush
+        return True, flush_suit
     except:
         print("no flush")
+        return False, None
 
 
-def is_straight_flush(card_arr):
-    card_arr.sort(key=lambda x: x.suit)
+def is_straight_flush(cards):
+    flush, suit = is_flush(cards)  # late i will change it that the function will be called only if flush was correct
+    if is_flush(cards):
+        cardsLst = cards.loc[cards["suit"] == suit].sort_values("value").value.to_list()
+        if len(cardsLst) == 7 and cardsLst[2:7] == list(range(cardsLst[2], cardsLst[2] + 5)):
+            return True, cardsLst, suit
+        elif len(cardsLst) == 6 and cardsLst[1:6] == list(range(cardsLst[1], cardsLst[0] + 5)):
+            return True, cardsLst, suit
+        elif cardsLst == list(range(cardsLst[0], cardsLst[0] + 5)):
+            return True, cardsLst, suit
+        else:
+            return False, None, None
+    else:
+        return False, None, None
+
+
+def is_straight(cards):
+    cardsLst = cards.sort_values("value").value.to_list()
+    cardsLst = list(set(cardsLst))
+    for i in range(3):
+        if any((cardsLst[i:(i + 5)] == list(range(cardsLst[i], cardsLst[i] + 5)) for i in range(3))):
+            print(cardsLst)
+            return True
+    return False
 
 
 def main():
-    c1 = Card(7, "hearts")
-    c2 = Card(7, "diamonds")
+    c1 = Card(2, "hearts")
+    c2 = Card(2, "diamonds")
     cc = CommunityCards()
-    cc.flop(Card(3, "diamonds"), Card(2, "diamonds"), Card(6, "spades"))
-    cc.turn(Card(4, "spades"))
-    cc.turn(Card(4, "diamonds"))
+    cc.flop(Card(2, "diamonds"), Card(7, "diamonds"), Card(7, "spades"))
+    cc.turn(Card(5, "diamonds"))
+    cc.river(Card(5, "diamonds"))
     noy = PlayerHand(c1, c2)
-    is_flush(pd.concat([noy.hand, cc.comCard], ignore_index=True))
+    print(is_straight(pd.concat([noy.hand, cc.comCard], ignore_index=True)))
 
 
 if __name__ == '__main__':
